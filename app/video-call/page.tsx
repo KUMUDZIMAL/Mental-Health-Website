@@ -1,59 +1,69 @@
-'use client';
+"use client";
+import React, { useEffect, useRef } from "react";
+import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 
-import { useState } from 'react';
-import VideoCall from '@/myComponents/VideoCall';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+interface VideoCallProps {
+  userId: string;
+  callId: string;
+}
 
-export default function VideoCallPage() {
-  const [userId, setUserId] = useState('');
-  const [callId, setCallId] = useState('');
-  const [isCallStarted, setIsCallStarted] = useState(false);
+const VideoCall: React.FC<VideoCallProps> = ({ userId, callId }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const startCall = () => {
-    if (userId && callId) {
-      setIsCallStarted(true);
-    }
-  };
+  useEffect(() => {
+    const startCall = async () => {
+      if (!containerRef.current) {
+        console.error("Container element is not available");
+        return;
+      }
 
-  if (isCallStarted) {
-    return <VideoCall userId={userId} callId={callId} />;
-  }
+      // Replace these with your actual AppId and ServerSecret
+      const AppId = 74206127;
+      const ServerSecret = "20a0c3c047ae13bf7a606cd5fef59b3e";
+      // Generate a kit token. Adjust the parameters as needed.
+      const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+        AppId,
+        ServerSecret,
+        callId, // room id is callId here
+        userId,
+        "TestUser" // You can replace with dynamic username if available
+      );
+      console.log("Generated kit token:", kitToken);
+
+      // Create the ZegoUIKit instance
+      const zp = ZegoUIKitPrebuilt.create(kitToken);
+      if (!zp || typeof zp.joinRoom !== "function") {
+        console.error("ZegoUIKitPrebuilt.create did not return a valid instance with joinRoom");
+        return;
+      }
+
+      // Join the room
+      zp.joinRoom({
+        container: containerRef.current,
+        sharedLinks: [
+          {
+            name: "Copy Link",
+            url: `https://localhost:3000/video-call/${callId}`,
+            scenario: {
+              mode: ZegoUIKitPrebuilt.OneONoneCall,
+            },
+          },
+        ],
+      });
+      console.log("Meeting initialized");
+    };
+
+    startCall();
+  }, [userId, callId]);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center">Start Video Call</h1>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">User ID</label>
-            <Input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              placeholder="Enter your user ID"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Call ID</label>
-            <Input
-              type="text"
-              value={callId}
-              onChange={(e) => setCallId(e.target.value)}
-              placeholder="Enter call ID"
-              className="w-full"
-            />
-          </div>
-          <Button
-            onClick={startCall}
-            className="w-full"
-            disabled={!userId || !callId}
-          >
-            Join Call
-          </Button>
-        </div>
-      </div>
+    <div>
+      <div
+        ref={containerRef}
+        style={{ width: "100%", height: "100vh", border: "2px solid red" }}
+      />
     </div>
   );
-} 
+};
+
+export default VideoCall;
