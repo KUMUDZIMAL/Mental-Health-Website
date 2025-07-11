@@ -1,15 +1,8 @@
-import fs from "fs";
+// next.config.mjs
 /** @type {import('next').NextConfig} */
-
 const nextConfig = {
-//   experimental: {
-//     https: {
-//       key: fs.readFileSync("./localhost+2-key.pem"),
-//       cert: fs.readFileSync("./localhost+2.pem"),
-//     },
-//   },
-typescript: {
-    ignoreBuildErrors: true, // ⚠️ Dangerous in production!
+  typescript: {
+    ignoreBuildErrors: true, // ⚠️ Skips TS errors at build time (not recommended for prod)
   },
 };
 
